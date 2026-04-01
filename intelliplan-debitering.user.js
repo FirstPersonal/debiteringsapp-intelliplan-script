@@ -1,7 +1,7 @@
 ﻿// ==UserScript==
 // @name         Debiteringsapp IntelliPlan
 // @namespace    robin/debitering
-// @version      2026.4.1.125957
+// @version      2026.4.1.132034
 // @description  Stabil version för Normal tid, ATF, SAT-tid och Skiftformstillägg.
 // @match        https://*.intelliplan.eu/*
 // @noframes
@@ -19,6 +19,10 @@
   if (window.top !== window.self) {
     return;
   }
+
+  const SCRIPT_VERSION = (typeof GM_info !== "undefined" && GM_info.script && GM_info.script.version)
+    ? GM_info.script.version
+    : "okänd";
 
   const PANEL_ID = "debiteringsapp-panel";
   const BRIDGE_URL = "http://127.0.0.1:8765/current";
@@ -895,6 +899,7 @@
       <div class="head">
         <div class="head-main">
           <div class="title">Debiteringsapp + IntelliPlan</div>
+          <div class="sub">Version ${SCRIPT_VERSION}</div>
         </div>
         <div class="head-actions">
           <button class="icon-button button-refresh-compact" type="button" title="Uppdatera värden" aria-label="Uppdatera värden">↻</button>
