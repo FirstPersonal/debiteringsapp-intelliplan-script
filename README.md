@@ -1,4 +1,4 @@
-# Debiteringsapp IntelliPlan userscript
+﻿# Debiteringsapp IntelliPlan userscript
 
 Det hÃ¤r repot innehÃ¥ller den publika Tampermonkey-versionen av Debiteringsapp fÃ¶r IntelliPlan.
 
