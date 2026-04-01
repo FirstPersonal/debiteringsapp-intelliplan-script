@@ -1,8 +1,8 @@
 ﻿// ==UserScript==
 // @name         Debiteringsapp IntelliPlan
 // @namespace    robin/debitering
-// @version      2026.4.1.125327
-// @description  Stabil version fÃ¶r Normal tid, ATF, SAT-tid och SkiftformstillÃ¤gg.
+// @version      2026.4.1.125957
+// @description  Stabil version för Normal tid, ATF, SAT-tid och Skiftformstillägg.
 // @match        https://*.intelliplan.eu/*
 // @noframes
 // @grant        GM_xmlhttpRequest
@@ -27,14 +27,14 @@
   const ARTICLE_NORMAL = "Normal tid";
   const ARTICLE_ATF = "ATF";
   const ARTICLE_SAT = "SAT-tid";
-  const ARTICLE_SHIFT = "SkiftformstillÃ¤gg";
+  const ARTICLE_SHIFT = "Skiftformstillägg";
 
   const TEXT_NORMTID = "Normaltid";
-  const TEXT_ATF_MARKER = "ArbetstidsfÃ¶rkortning";
+  const TEXT_ATF_MARKER = "Arbetstidsförkortning";
   const TEXT_SAT_MARKER = "SAT-tid";
-  const TEXT_LON_PRIS = "LÃ¶n & pris";
-  const TEXT_FAST_LON = "Fast lÃ¶n";
-  const TEXT_PERCENT_LON = "% av lÃ¶n";
+  const TEXT_LON_PRIS = "Lön & pris";
+  const TEXT_FAST_LON = "Fast lön";
+  const TEXT_PERCENT_LON = "% av lön";
   const TEXT_FAST_PRIS = "Fast pris";
 
   const ROW_CONFIGS = {
@@ -238,7 +238,7 @@
 
   function formatBridgeData(data) {
     if (!data || !data.display) {
-      return "Ingen data hÃ¤mtad Ã¤nnu.";
+      return "Ingen data hämtad ännu.";
     }
 
     const display = data.display;
@@ -249,9 +249,9 @@
     const atfSatContribution = atfContribution + satContribution;
     const hasSat = satPrice > 0;
     const lines = [
-      `Normal tid: Fast lÃ¶n ${Number(display.salaryPrice ?? 0).toLocaleString("sv-SE", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}, % av lÃ¶n ${Number(display.salaryFactorPercent ?? 0).toLocaleString("sv-SE", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
+      `Normal tid: Fast lön ${Number(display.salaryPrice ?? 0).toLocaleString("sv-SE", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}, % av lön ${Number(display.salaryFactorPercent ?? 0).toLocaleString("sv-SE", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
       `ATF: Fast pris ${atfPrice.toLocaleString("sv-SE", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
-      `${hasSat ? "ATF + SAT (avsÃ¤ttning)" : "ATF (avsÃ¤ttning)"}: ${atfSatContribution.toLocaleString("sv-SE", { minimumFractionDigits: 3, maximumFractionDigits: 3 })}`
+      `${hasSat ? "ATF + SAT (avsättning)" : "ATF (avsättning)"}: ${atfSatContribution.toLocaleString("sv-SE", { minimumFractionDigits: 3, maximumFractionDigits: 3 })}`
     ];
 
     if (hasSat) {
@@ -259,7 +259,7 @@
     }
 
     if (Number(display.shiftPrice ?? 0) > 0) {
-      lines.push(`SkiftformstillÃ¤gg: Fast lÃ¶n ${Number(display.shiftPrice ?? 0).toLocaleString("sv-SE", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}, % av lÃ¶n ${Number(display.shiftFactorPercent ?? 0).toLocaleString("sv-SE", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`);
+      lines.push(`Skiftformstillägg: Fast lön ${Number(display.shiftPrice ?? 0).toLocaleString("sv-SE", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}, % av lön ${Number(display.shiftFactorPercent ?? 0).toLocaleString("sv-SE", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`);
     }
 
     return lines.join("\n");
@@ -329,7 +329,7 @@
     if (!button || !panel) return;
     const rectBefore = panel.getBoundingClientRect();
     panel.classList.toggle("collapsed", isCollapsed);
-    button.textContent = isCollapsed ? "+" : "âˆ’";
+    button.textContent = isCollapsed ? "+" : "−";
     button.title = isCollapsed ? "Visa panel" : "Minimera panel";
     button.setAttribute("aria-label", button.title);
     window.requestAnimationFrame(() => {
@@ -561,18 +561,18 @@
   }
 
   async function refreshBridgeData() {
-    setStatus("HÃ¤mtar data frÃ¥n appen...");
+    setStatus("Hämtar data från appen...");
     bridgeData = await fetchBridgeData();
     updateDataPanel();
     updateSatButtonVisibility();
     updateShiftButtonVisibility();
 
     if (!bridgeData) {
-      setStatus("Kunde inte hÃ¤mta data frÃ¥n appen.");
+      setStatus("Kunde inte hämta data från appen.");
       return false;
     }
 
-    setStatus("Data hÃ¤mtades frÃ¥n appen.");
+    setStatus("Data hämtades från appen.");
     return true;
   }
 
@@ -608,7 +608,7 @@
     updateShiftButtonVisibility();
 
     if (didChange) {
-      setStatus("VÃ¤rden uppdaterades automatiskt.");
+      setStatus("Värden uppdaterades automatiskt.");
     }
 
     return true;
@@ -616,35 +616,35 @@
 
   async function openArticle(articleName) {
     if (findOpenArticlePanel(articleName)) {
-      setStatus(`${articleName} Ã¤r redan Ã¶ppen.`);
+      setStatus(`${articleName} är redan öppen.`);
       return true;
     }
 
     const target = findArticleListRow(articleName);
     if (!target) {
-      setStatus(`Hittade inte raden fÃ¶r ${articleName}.`);
+      setStatus(`Hittade inte raden för ${articleName}.`);
       return false;
     }
 
-    setStatus(`Klickar pÃ¥ ${articleName}...`);
+    setStatus(`Klickar på ${articleName}...`);
     realClick(target);
 
     for (let i = 0; i < 30; i += 1) {
       if (findOpenArticlePanel(articleName)) {
-        setStatus(`${articleName} Ã¶ppnades.`);
+        setStatus(`${articleName} öppnades.`);
         return true;
       }
       await sleep(100);
     }
 
-    setStatus(`Raden hittades och klickades, men ${articleName} Ã¶ppnades inte.`);
+    setStatus(`Raden hittades och klickades, men ${articleName} öppnades inte.`);
     return false;
   }
 
   async function openRow(articleName, suffix, textMatch, inputSelector, label) {
     const row = findRowInOpenPanel(articleName, suffix, textMatch);
     if (!row) {
-      setStatus(`${label} Ã¤r inte synlig i hÃ¶gerspalten.`);
+      setStatus(`${label} är inte synlig i högerspalten.`);
       return false;
     }
 
@@ -661,21 +661,21 @@
       for (let i = 0; i < 15; i += 1) {
         const input = document.querySelector(inputSelector);
         if (input && isVisible(input)) {
-          setStatus(`Dialogen fÃ¶r ${label} Ã¶ppnades.`);
+          setStatus(`Dialogen för ${label} öppnades.`);
           return true;
         }
         await sleep(100);
       }
     }
 
-    setStatus(`Raden ${label} hittades, men dialogen Ã¶ppnades inte.`);
+    setStatus(`Raden ${label} hittades, men dialogen öppnades inte.`);
     return false;
   }
 
   async function fillOpenDialog(inputSelector, value, infoLabel, successLabel) {
     const input = document.querySelector(inputSelector);
     if (!input || !isVisible(input)) {
-      setStatus(`Dialogen fÃ¶r ${successLabel} Ã¤r inte Ã¶ppen.`);
+      setStatus(`Dialogen för ${successLabel} är inte öppen.`);
       return false;
     }
 
@@ -727,7 +727,7 @@
       successLabel,
       decimals = 2,
       isValueAllowed = () => true,
-      invalidValueText = "VÃ¤rdet frÃ¥n Debiteringsapp kunde inte anvÃ¤ndas."
+      invalidValueText = "Värdet från Debiteringsapp kunde inte användas."
     } = options;
 
     if (!await ensureBridgeData()) return false;
@@ -758,8 +758,8 @@
       articleName: ARTICLE_NORMAL,
       rowKey: "fastLon",
       displayKey: "salaryPrice",
-      missingValueText: "Kunde inte hÃ¤mta vÃ¤rdet fÃ¶r Fast lÃ¶n frÃ¥n Debiteringsapp.",
-      infoLabel: "Fast lÃ¶n frÃ¥n appen",
+      missingValueText: "Kunde inte hämta värdet för Fast lön från Debiteringsapp.",
+      infoLabel: "Fast lön från appen",
       successLabel: TEXT_FAST_LON
     });
   }
@@ -769,8 +769,8 @@
       articleName: ARTICLE_NORMAL,
       rowKey: "percentLon",
       displayKey: "salaryFactorPercent",
-      missingValueText: "Kunde inte hÃ¤mta vÃ¤rdet fÃ¶r % av lÃ¶n frÃ¥n Debiteringsapp.",
-      infoLabel: "% av lÃ¶n frÃ¥n appen",
+      missingValueText: "Kunde inte hämta värdet för % av lön från Debiteringsapp.",
+      infoLabel: "% av lön från appen",
       successLabel: TEXT_PERCENT_LON
     });
   }
@@ -780,8 +780,8 @@
       articleName: ARTICLE_ATF,
       rowKey: "fastPris",
       displayKey: "atfPrice",
-      missingValueText: "Kunde inte hÃ¤mta vÃ¤rdet fÃ¶r ATF frÃ¥n Debiteringsapp.",
-      infoLabel: "ATF frÃ¥n appen",
+      missingValueText: "Kunde inte hämta värdet för ATF från Debiteringsapp.",
+      infoLabel: "ATF från appen",
       successLabel: "ATF Fast pris"
     });
   }
@@ -791,11 +791,11 @@
       articleName: ARTICLE_SAT,
       rowKey: "fastPris",
       displayKey: "satPrice",
-      missingValueText: "Kunde inte hÃ¤mta vÃ¤rdet fÃ¶r SAT-tid frÃ¥n Debiteringsapp.",
-      infoLabel: "SAT-tid frÃ¥n appen",
+      missingValueText: "Kunde inte hämta värdet för SAT-tid från Debiteringsapp.",
+      infoLabel: "SAT-tid från appen",
       successLabel: "SAT-tid Fast pris",
       isValueAllowed: (value) => value > 0,
-      invalidValueText: "SAT-tid Ã¤r inte aktiverat i appen eller har vÃ¤rdet 0,00."
+      invalidValueText: "SAT-tid är inte aktiverat i appen eller har värdet 0,00."
     });
   }
 
@@ -804,9 +804,9 @@
       articleName: ARTICLE_SHIFT,
       rowKey: "fastLon",
       displayKey: "shiftPrice",
-      missingValueText: "Kunde inte hÃ¤mta vÃ¤rdet fÃ¶r SkiftformstillÃ¤gg Fast lÃ¶n frÃ¥n Debiteringsapp.",
-      infoLabel: "SkiftformstillÃ¤gg Fast lÃ¶n frÃ¥n appen",
-      successLabel: "SkiftformstillÃ¤gg Fast lÃ¶n"
+      missingValueText: "Kunde inte hämta värdet för Skiftformstillägg Fast lön från Debiteringsapp.",
+      infoLabel: "Skiftformstillägg Fast lön från appen",
+      successLabel: "Skiftformstillägg Fast lön"
     });
   }
 
@@ -815,9 +815,9 @@
       articleName: ARTICLE_SHIFT,
       rowKey: "percentLon",
       displayKey: "shiftFactorPercent",
-      missingValueText: "Kunde inte hÃ¤mta vÃ¤rdet fÃ¶r SkiftformstillÃ¤gg % av lÃ¶n frÃ¥n Debiteringsapp.",
-      infoLabel: "SkiftformstillÃ¤gg % av lÃ¶n frÃ¥n appen",
-      successLabel: "SkiftformstillÃ¤gg % av lÃ¶n"
+      missingValueText: "Kunde inte hämta värdet för Skiftformstillägg % av lön från Debiteringsapp.",
+      infoLabel: "Skiftformstillägg % av lön från appen",
+      successLabel: "Skiftformstillägg % av lön"
     });
   }
 
@@ -845,7 +845,7 @@
   }
 
   async function fillSkiftformstillagg() {
-    setStatus("Fyller SkiftformstillÃ¤gg...");
+    setStatus("Fyller Skiftformstillägg...");
     const opened = await openArticle(ARTICLE_SHIFT);
     if (!opened) return;
     if (!await fillShiftFastLon()) return;
@@ -897,19 +897,19 @@
           <div class="title">Debiteringsapp + IntelliPlan</div>
         </div>
         <div class="head-actions">
-          <button class="icon-button button-refresh-compact" type="button" title="Uppdatera vÃ¤rden" aria-label="Uppdatera vÃ¤rden">â†»</button>
-          <button class="toggle" type="button" title="Minimera panel" aria-label="Minimera panel">âˆ’</button>
+          <button class="icon-button button-refresh-compact" type="button" title="Uppdatera värden" aria-label="Uppdatera värden">↻</button>
+          <button class="toggle" type="button" title="Minimera panel" aria-label="Minimera panel">−</button>
         </div>
       </div>
       <div class="body">
-        <div class="status">Scriptet Ã¤r laddat.</div>
+        <div class="status">Scriptet är laddat.</div>
         <button class="button secondary button-copy" type="button">Kopiera underlag</button>
         <button class="button button-fill-all" type="button">Fyll alla</button>
         <button class="button button-fill-normal" type="button">Fyll Normal tid</button>
         <button class="button button-fill-atf" type="button">Fyll ATF</button>
         <button class="button button-fill-sat" type="button">Fyll SAT-tid</button>
-        <button class="button button-fill-shift" type="button">Fyll SkiftformstillÃ¤gg</button>
-        <div class="data">Ingen data hÃ¤mtad Ã¤nnu.</div>
+        <button class="button button-fill-shift" type="button">Fyll Skiftformstillägg</button>
+        <div class="data">Ingen data hämtad ännu.</div>
       </div>
     `;
 
