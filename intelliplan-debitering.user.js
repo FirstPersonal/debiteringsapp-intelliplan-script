@@ -1,7 +1,7 @@
 ﻿// ==UserScript==
 // @name         Debiteringsapp IntelliPlan
 // @namespace    robin/debitering
-// @version      2026.4.1.132034
+// @version      2026.4.8.155731
 // @description  Stabil version för Normal tid, ATF, SAT-tid och Skiftformstillägg.
 // @match        https://*.intelliplan.eu/*
 // @noframes
@@ -88,6 +88,7 @@
   let bridgeData = null;
   let isCollapsed = true;
   let panelPosition = null;
+  let manualRefreshInFlight = false;
   let bridgeFingerprint = null;
   let bridgeRefreshInFlight = false;
   let autoRefreshTimerId = null;
@@ -167,6 +168,18 @@
       line-height: 1;
       font-weight: 700;
       flex: 0 0 auto;
+      transition: transform 0.2s ease, background 0.2s ease, opacity 0.2s ease;
+    }
+    #${PANEL_ID} .icon-button:active {
+      transform: scale(0.92);
+    }
+    #${PANEL_ID} .icon-button.is-busy {
+      background: rgba(255, 255, 255, 0.28);
+      cursor: wait;
+      animation: ${PANEL_ID}-spin 0.8s linear infinite;
+    }
+    #${PANEL_ID} .icon-button:disabled {
+      opacity: 0.9;
     }
     #${PANEL_ID} .body {
       padding: 14px;
@@ -209,6 +222,10 @@
       padding: 10px 12px;
       white-space: pre-line;
     }
+    @keyframes ${PANEL_ID}-spin {
+      from { transform: rotate(0deg); }
+      to { transform: rotate(360deg); }
+    }
   `;
 
   function injectStyles() {
@@ -228,6 +245,15 @@
   function setStatus(text) {
     const status = document.querySelector(`#${PANEL_ID} .status`);
     if (status) status.textContent = text;
+  }
+
+  function setRefreshButtonBusy(isBusy) {
+    const button = document.querySelector(`#${PANEL_ID} .button-refresh-compact`);
+    if (!button) return;
+    button.classList.toggle("is-busy", isBusy);
+    button.disabled = isBusy;
+    button.title = isBusy ? "Uppdaterar värden..." : "Uppdatera värden";
+    button.setAttribute("aria-label", button.title);
   }
 
   function getBridgeFingerprint(data) {
@@ -580,6 +606,25 @@
     return true;
   }
 
+  async function handleManualRefresh() {
+    if (manualRefreshInFlight) return;
+
+    manualRefreshInFlight = true;
+    setRefreshButtonBusy(true);
+    const startedAt = Date.now();
+
+    try {
+      await refreshBridgeData();
+    } finally {
+      const elapsed = Date.now() - startedAt;
+      if (elapsed < 350) {
+        await sleep(350 - elapsed);
+      }
+      setRefreshButtonBusy(false);
+      manualRefreshInFlight = false;
+    }
+  }
+
   async function ensureBridgeData() {
     if (!bridgeData) {
       return refreshBridgeData();
@@ -921,7 +966,7 @@
     document.body.appendChild(wrapper);
     enableDragging(wrapper);
     wrapper.querySelector(".toggle").addEventListener("click", togglePanel);
-    wrapper.querySelector(".button-refresh-compact").addEventListener("click", refreshBridgeData);
+    wrapper.querySelector(".button-refresh-compact").addEventListener("click", handleManualRefresh);
     wrapper.querySelector(".button-copy").addEventListener("click", copyUnderlag);
     wrapper.querySelector(".button-fill-all").addEventListener("click", fillAllaTre);
     wrapper.querySelector(".button-fill-normal").addEventListener("click", fillNormalTid);
