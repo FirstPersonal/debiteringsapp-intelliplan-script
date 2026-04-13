@@ -1,7 +1,7 @@
 ﻿// ==UserScript==
 // @name         Debiteringsapp IntelliPlan
 // @namespace    robin/debitering
-// @version      2026.4.8.155731
+// @version      2026.4.13.145052
 // @description  Stabil version för Normal tid, ATF, SAT-tid och Skiftformstillägg.
 // @match        https://*.intelliplan.eu/*
 // @noframes
@@ -519,15 +519,29 @@
       });
   }
 
-  function rightSideMarker(exactText) {
-    return [...document.querySelectorAll("div, p, span")]
+  function isArticleDetailContext(node) {
+    if (!node) return false;
+    if ((node.id || "").includes("OrderPricingTimeArticleContext.")) return true;
+    return !!node.querySelector('[id*="OrderPricingTimeArticleContext."]');
+  }
+
+  function rightSideArticlePanels() {
+    return [...document.querySelectorAll('[id*="OrderPricingTimeArticleContext."]')]
+      .map((node) => node.closest('[data-type="Context"]') || node)
+      .filter(Boolean)
+      .filter((node, index, array) => array.indexOf(node) === index)
       .filter(isVisible)
-      .find((node) => {
+      .filter((node) => {
         const rect = node.getBoundingClientRect();
-        return rect.left > (window.innerWidth * 0.5)
-          && rect.top > 120
-          && (node.innerText || "").trim() === exactText;
-      }) || null;
+        return rect.left > (window.innerWidth * 0.55) && rect.top > 80;
+      });
+  }
+
+  function rightSideMarker(exactText) {
+    return rightSideArticlePanels()
+      .flatMap((panel) => [panel, ...panel.querySelectorAll("div, p, span")])
+      .filter(isVisible)
+      .find((node) => (node.innerText || "").trim() === exactText) || null;
   }
 
   function findArticleListRow(articleTitle) {
@@ -535,18 +549,22 @@
       .filter(isVisible)
       .find((node) => {
         const rect = node.getBoundingClientRect();
-        if (rect.left > (window.innerWidth * 0.45) || rect.top < 120) return false;
+        if (rect.top < 120) return false;
         return !!node.querySelector(`h4[title="${articleTitle}"]`);
       }) || null;
   }
 
   function findOpenArticlePanel(articleName) {
-    const contexts = rightSideContexts();
+    const contexts = rightSideArticlePanels();
     const config = ARTICLE_CONFIGS_BY_NAME[articleName];
     if (!config) return null;
 
     const marker = rightSideMarker(config.markerText);
-    if (marker) return marker.closest('[data-type="Context"]');
+    if (marker) {
+      return contexts.find((node) => node === marker || node.contains(marker))
+        || marker.closest('[data-type="Context"]')
+        || marker.closest('[id*="OrderPricingTimeArticleContext."]');
+    }
 
     return contexts.find((node) => {
       const text = node.innerText || "";
