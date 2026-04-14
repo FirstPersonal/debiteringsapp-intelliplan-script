@@ -1,7 +1,7 @@
 ﻿// ==UserScript==
 // @name         Debiteringsapp IntelliPlan
 // @namespace    robin/debitering
-// @version      2026.4.13.145052
+// @version      2026.4.14.150658
 // @description  Stabil version för Normal tid, ATF, SAT-tid och Skiftformstillägg.
 // @match        https://*.intelliplan.eu/*
 // @noframes
@@ -138,10 +138,11 @@
       font-weight: 700;
       margin: 0;
     }
-    #${PANEL_ID} .sub {
+    #${PANEL_ID} .meta {
+      margin-top: 8px;
       font-size: 11px;
-      opacity: 0.9;
-      margin-top: 2px;
+      color: rgba(15, 23, 42, 0.65);
+      text-align: right;
     }
     #${PANEL_ID} .toggle {
       border: 0;
@@ -406,6 +407,18 @@
     panelPosition = clamped;
   }
 
+  function dockPanelBottomRight() {
+    const panel = document.getElementById(PANEL_ID);
+    if (!panel) return;
+
+    panelPosition = clampPanelPosition(
+      panel,
+      window.innerWidth - panel.offsetWidth - 18,
+      window.innerHeight - panel.offsetHeight - 18
+    );
+    applyPanelPosition();
+  }
+
   function keepPanelVisible() {
     const panel = document.getElementById(PANEL_ID);
     if (!panel || !panelPosition || isCollapsed) return;
@@ -430,6 +443,10 @@
 
     panelPosition = clampPanelPosition(panel, nextLeft, nextTop);
     applyPanelPosition();
+  }
+
+  function handleWindowResize() {
+    dockPanelBottomRight();
   }
 
   function enableDragging(panel) {
@@ -533,7 +550,7 @@
       .filter(isVisible)
       .filter((node) => {
         const rect = node.getBoundingClientRect();
-        return rect.left > (window.innerWidth * 0.55) && rect.top > 80;
+        return rect.left > (window.innerWidth * 0.45) && rect.top > 80;
       });
   }
 
@@ -962,7 +979,6 @@
       <div class="head">
         <div class="head-main">
           <div class="title">Debiteringsapp + IntelliPlan</div>
-          <div class="sub">Version ${SCRIPT_VERSION}</div>
         </div>
         <div class="head-actions">
           <button class="icon-button button-refresh-compact" type="button" title="Uppdatera värden" aria-label="Uppdatera värden">↻</button>
@@ -978,6 +994,7 @@
         <button class="button button-fill-sat" type="button">Fyll SAT-tid</button>
         <button class="button button-fill-shift" type="button">Fyll Skiftformstillägg</button>
         <div class="data">Ingen data hämtad ännu.</div>
+        <div class="meta">Version ${SCRIPT_VERSION}</div>
       </div>
     `;
 
@@ -1015,7 +1032,7 @@
     }
     injectStyles();
     createPanel();
-    window.addEventListener("resize", applyPanelPosition);
+    window.addEventListener("resize", handleWindowResize);
     autoRefreshBridgeData().catch(() => {});
     startAutoRefresh();
   }
