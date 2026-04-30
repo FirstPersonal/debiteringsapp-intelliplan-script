@@ -1,7 +1,7 @@
 ﻿// ==UserScript==
 // @name         Debiteringsapp IntelliPlan
 // @namespace    robin/debitering
-// @version      2026.4.27.110601
+// @version      2026.4.30.113624
 // @description  Stabil version för Normal tid, ATF, SAT-tid och Skiftformstillägg.
 // @match        https://*.intelliplan.eu/*
 // @noframes
